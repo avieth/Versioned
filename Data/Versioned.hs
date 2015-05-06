@@ -27,15 +27,15 @@ import Data.TypeNat.Nat
 import Data.Migration
 
 -- | A class describing datatypes which are versioned:
---   - they indicate a latest version
---   - they give a history of versions, indexed by version number
---   - they give a bijection between the datatype and the version history when
---     indexed at the latest version
---   - they give a MigrationPath
 class Versioned d where
+  -- | The latest version of this datatype.
   type LatestVersion d :: Nat
+  -- | The history of versions of this datatype.
   data VersionHistory d :: Nat -> *
+  -- | A bijection between the datatype and the version history indexed at
+  --   the latest version.
   bijectionLatestVersion :: d :<->: ((VersionHistory d) (LatestVersion d))
+  -- | A path of single-step migrations from Zero to the latest version.
   migrationPath :: MigrationPath (VersionHistory d) (LatestVersion d)
 
 -- | Brings a @VersionHistory d n@ for some @d@ to the latest version, as
