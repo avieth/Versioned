@@ -19,6 +19,7 @@ module Data.Versioned (
 
     Versioned(..)
   , migrateToLatest
+  , getLatest
 
   ) where
 
@@ -48,3 +49,14 @@ migrateToLatest
   => (VersionHistory d) n
   -> (VersionHistory d) (LatestVersion d)
 migrateToLatest = migrate migrationPath
+
+-- | Produce a @d@ from any @(VersionHistory d) n@, by migrating to the latest
+--   version and using @bijectionLatestVersion@.
+getLatest
+  :: forall d n m .
+     ( Versioned d
+     , LTE n (LatestVersion d)
+     )
+  => (VersionHistory d) n
+  -> d
+getLatest = (biFrom bijectionLatestVersion) . migrateToLatest
