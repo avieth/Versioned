@@ -14,6 +14,7 @@ Portability : non-portable (GHC only)
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Data.Migration (
 
@@ -24,6 +25,7 @@ module Data.Migration (
   ) where
 
 import Data.TypeNat.Nat
+import Data.Proxy
 
 -- | A Migration of a Nat-indexed datatype from one index to its successor.
 data Migration :: (Nat -> *) -> Nat -> * where
@@ -41,11 +43,13 @@ data MigrationPath :: (Nat -> *) -> Nat -> * where
 
 -- | Carry out a migration from n to m on some Nat-indexed datatype, where
 --   m need not be the successor of n
-migrate :: forall d n m . LTE n m => MigrationPath d m -> d n -> d m
-migrate path = lteInduction step
+migrate :: forall d n m . (StrongLTE m m, LTE n m) => MigrationPath d m -> d n -> d m
+migrate path = lteInduction proxy step
   where
     step :: forall k . LTE (S k) m => d k -> d (S k)
     step x = migrateOnce (getMigration path) x
+    proxy :: Proxy m
+    proxy = Proxy
 
 -- | Extract the Migration from the top of a MigrationPath.
 migration :: MigrationPath d (S n) -> Migration d (S n)

@@ -14,6 +14,7 @@ Portability : non-portable (GHC only)
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Data.Versioned (
 
@@ -45,6 +46,7 @@ migrateToLatest
   :: forall d n m .
      ( Versioned d
      , LTE n (LatestVersion d)
+     , StrongLTE (LatestVersion d) (LatestVersion d)
      )
   => (VersionHistory d) n
   -> (VersionHistory d) (LatestVersion d)
@@ -56,6 +58,7 @@ getLatest
   :: forall d n m .
      ( Versioned d
      , LTE n (LatestVersion d)
+     , StrongLTE (LatestVersion d) (LatestVersion d)
      )
   => (VersionHistory d) n
   -> d
