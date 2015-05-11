@@ -15,7 +15,10 @@ import Data.Bijection
 --  deriving Show
 
 -- Our second version.
-data Review = Good | Bad | Mediocre | Other String
+--data Review = Good | Bad | Mediocre | Other String
+--  deriving Show
+
+data Review = Review String
   deriving Show
 
 instance Versioned Review where
@@ -23,7 +26,7 @@ instance Versioned Review where
   -- Versions are identified by types of kind Nat.
   -- We indicate here that the latest version is S (S Z), for which Two is
   -- a type synonym (from the TypeNat package).
-  type LatestVersion Review = Two
+  type LatestVersion Review = Three
 
   -- The version history for Review corresponds to the revisions given above.
   data VersionHistory Review n where
@@ -63,6 +66,8 @@ instance Versioned Review where
     Review2Mediocre :: VersionHistory Review Two
     Review2Other :: String -> VersionHistory Review Two
 
+    Review3 :: String -> VersionHistory Review Three
+
   -- Any Versioned t instance needs a bijection between the latest version
   -- in VersionHistory and t itself. Given the way in which we construct
   -- VersionHistory, this is completely mechanical. The type index isolates the
@@ -73,22 +78,17 @@ instance Versioned Review where
 
       forwards :: Review -> (VersionHistory Review) (LatestVersion Review)
       forwards review = case review of
-          Good -> Review2Good
-          Bad -> Review2Bad
-          Mediocre -> Review2Mediocre
-          Other str -> Review2Other str
+          Review str -> Review3 str
 
       backwards :: (VersionHistory Review) (LatestVersion Review) -> Review
       backwards version = case version of
-          Review2Good -> Good
-          Review2Bad -> Bad
-          Review2Mediocre -> Mediocre
-          Review2Other str -> Other str
+          Review3 str -> Review str
 
   -- The migration path is a sequence of single-step migrations (from version
   -- n to version (S n)).
   migrationPath =
-        ConsMigrationPath migrate12
+        ConsMigrationPath migrate23
+      $ ConsMigrationPath migrate12
       $ ConsMigrationPath migrate01
         TrivialMigrationPath
 
@@ -102,3 +102,10 @@ migrate12 = Migration $ \versionOne -> case versionOne of
     Review1Good -> Review2Good
     Review1Bad -> Review2Bad
     Review1Mediocre -> Review2Mediocre
+
+migrate23 :: Migration (VersionHistory Review) Three
+migrate23 = Migration $ \versionTwo -> case versionTwo of
+    Review2Good -> Review3 "Good"
+    Review2Bad -> Review3 "Bad"
+    Review2Mediocre -> Review3 "Mediocre"
+    Review2Other str -> Review3 str
